@@ -1,20 +1,30 @@
 # Fuel Gauge IC MAX17205 driver
+import time, math
 from adafruit_bus_device.i2c_device import I2CDevice
 from micropython import const
 
-MAX1720X_VCELL_ADDR = const(0x09)  # Lowest cell voltage of a pack
-MAX1720X_REPSOC_ADDR = const(0x06)  # Reported state of charge
-MAX1720X_REPCAP_ADDR = const(0x05)  # Reported remaining capacity
-MAX1720X_CURRENT_ADDR = const(0x0A)  # Battery current
-MAX1720X_TTE_ADDR = const(0x11)  # Time to empty
-MAX1720X_TTF_ADDR = const(0x20)  # Time to full
-MAX1720X_CAPACITY_ADDR = const(0x10)  # Full capacity estimation
-MAX1720X_VBAT_ADDR = const(0xDA)  # Battery pack voltage
-MAX1720X_AVCELL_ADDR = const(0x17)  # Battery cycles
-MAX1720X_TIMERH_ADDR = const(0xBE)  # Time since power up
 
-MAX1720X_COMMAND_ADDR = const(0x60)  # Command register
-MAX1720X_CONFIG2_ADDR = const(0xBB)  # Command register
+MAX1720X_I2CADDR_WR = 0x0B
+MAX1720X_I2CADDR_RD = 0x36
+
+MAX1720X_STATUS_ADDR = 0x00  # Contains alert status and chip status
+MAX1720X_VCELL_ADDR = 0x09  # Lowest cell voltage of a pack
+MAX1720X_REPSOC_ADDR = 0x06  # Reported state of charge
+MAX1720X_REPCAP_ADDR = 0x05  # Reported remaining capacity
+MAX1720X_TEMP_ADDR = 0x08  # Temperature
+MAX1720X_CURRENT_ADDR = 0x0A  # Battery current
+MAX1720X_TTE_ADDR = 0x11  # Time to empty
+MAX1720X_TTF_ADDR = 0x20  # Time to full
+MAX1720X_CAPACITY_ADDR = 0x10  # Full capacity estimation
+MAX1720X_VBAT_ADDR = 0xDA  # Battery pack voltage
+MAX1720X_AVCELL_ADDR = 0x17  # Battery cycles
+MAX1720X_TIMERH_ADDR = 0xBE  # Time since power up
+
+MAX1720X_COMMAND_ADDR = 0x60  # Command register
+MAX1720X_CONFIG2_ADDR = 0xBB  # Command register
+MAX1720X_CFGPACK_ADDR = 0xB5  # nPackCfg register
+
+NPACKCFG_BALCFG = const(0x7 << 5) # cell balance config 
 
 
 def unpack_signed_short_int(byte_list):
@@ -29,11 +39,10 @@ def unpack_signed_short_int(byte_list):
     return val if val < 0x8000 else val - 0x10000
 
 
-class MAX17205:
-    def __init__(self, i2c, i2c_addr):
-        # 2 I2C addresses: read address (0x36) and write address (0x0B, shadow RAM)
-        # Only using read address
-        self.i2c_device = I2CDevice(i2c, i2c_addr)
+class MAX17205():
+    def __init__(self, i2c):
+        self.i2c_device = I2CDevice(i2c, MAX1720X_I2CADDR_RD)
+        self.i2c_device_cfg = I2CDevice(i2c, MAX1720X_I2CADDR_WR)
         self.rx_buffer = bytearray(2)
 
         self.voltage = 0.0
@@ -47,6 +56,24 @@ class MAX17205:
         self.ttf = 0
         self.time_pwrup = 0
 
+        # with self.i2c_device_cfg as i2c:
+        #     # Read 2 bytes from MAX1720X_CFGPACK_ADDR
+        #     i2c.write(bytes([MAX1720X_CFGPACK_ADDR, DATA_LOW, DATA_HIGH]))
+    def enable_cell_balancing(self, threshold):
+        balcfg = int(math.log2(threshold / (0.00125))) # need to adjust this
+        with self.i2c_device_cfg as i2c:
+            i2c.write(bytes([MAX1720X_CFGPACK_ADDR, balcfg]))
+
+    def read_cfg(self):
+        with self.i2c_device_cfg as i2c:
+            # Read 2 bytes from MAX1720X_CFGPACK_ADDR
+            i2c.write(bytes([MAX1720X_CFGPACK_ADDR]))
+
+        with self.i2c_device_cfg as i2c:
+            i2c.readinto(self.rx_buffer)
+
+        return self.rx_buffer
+
     def read_soc(self):
         """
         Reads SoC from the battery pack.
@@ -59,7 +86,8 @@ class MAX17205:
             i2c.readinto(self.rx_buffer)
 
         # Convert readback bytes to pack SoC
-        self.soc = int.from_bytes(self.rx_buffer, "little", signed=False) / 256
+        self.soc = int.from_bytes(
+            self.rx_buffer, 'little', signed=False) / 256
 
         return self.soc
 
@@ -75,7 +103,8 @@ class MAX17205:
             i2c.readinto(self.rx_buffer)
 
         # Convert readback bytes to pack capacity
-        self.capacity = int.from_bytes(self.rx_buffer, "little", signed=False) / 0.01
+        self.capacity = int.from_bytes(
+            self.rx_buffer, 'little', signed=False) / 0.01
 
         return self.capacity
 
@@ -94,7 +123,7 @@ class MAX17205:
         current_raw = unpack_signed_short_int(self.rx_buffer)
 
         # Cast int16 to a float and scale for mA current
-        self.current = float(current_raw) * 0.0015625 / 0.01
+        self.current = float(current_raw) * 0.0015625/0.01
 
         return self.current
 
@@ -110,7 +139,7 @@ class MAX17205:
             i2c.readinto(self.rx_buffer)
 
         # Convert readback bytes to a uint16
-        voltage_raw = int.from_bytes(self.rx_buffer, "little", signed=False)
+        voltage_raw = int.from_bytes(self.rx_buffer, 'little', signed=False)
 
         # Cast uint16 to a float and scale for mV voltage
         self.voltage = float(voltage_raw) * 1.25
@@ -129,7 +158,7 @@ class MAX17205:
             i2c.readinto(self.rx_buffer)
 
         # Convert readback bytes to a uint16
-        midvoltage_raw = int.from_bytes(self.rx_buffer, "little", signed=False)
+        midvoltage_raw = int.from_bytes(self.rx_buffer, 'little', signed=False)
 
         # Cast uint16 to a float and scale for mV voltage
         self.midvoltage = float(midvoltage_raw) * 0.078125
@@ -148,7 +177,8 @@ class MAX17205:
             i2c.readinto(self.rx_buffer)
 
         # Convert readback bytes to a uint16
-        self.cycles = int.from_bytes(self.rx_buffer, "little", signed=False)
+        self.cycles = int.from_bytes(
+            self.rx_buffer, 'little', signed=False)
 
         return self.cycles
 
@@ -164,7 +194,8 @@ class MAX17205:
             i2c.readinto(self.rx_buffer)
 
         # Convert readback bytes to a uint16
-        self.tte = int.from_bytes(self.rx_buffer, "little", signed=False) * 5.625
+        self.tte = int.from_bytes(
+            self.rx_buffer, 'little', signed=False) * 5.625
 
         return self.tte
 
@@ -180,7 +211,8 @@ class MAX17205:
             i2c.readinto(self.rx_buffer)
 
         # Convert readback bytes to a uint16
-        self.ttf = int.from_bytes(self.rx_buffer, "little", signed=False) * 5.625
+        self.ttf = int.from_bytes(
+            self.rx_buffer, 'little', signed=False) * 5.625
 
         return self.ttf
 
@@ -196,7 +228,8 @@ class MAX17205:
             i2c.readinto(self.rx_buffer)
 
         # Convert readback bytes to a uint16
-        self.time_pwrup = int.from_bytes(self.rx_buffer, "little", signed=False)
+        self.time_pwrup = int.from_bytes(
+            self.rx_buffer, 'little', signed=False)
 
         return self.time_pwrup
 
@@ -206,6 +239,12 @@ class MAX17205:
 
         :return: None
         """
+        # with self.i2c_device as i2c:
+        #     # Write to MAX1720X_COMMAND_ADDR
+        #     i2c.write(bytes([MAX1720X_COMMAND_ADDR, 0x0F, 0x00]))
+
+        # # Wait
+        # time.sleep(50/1000)
 
         with self.i2c_device as i2c:
             # Write to MAX1720X_CONFIG2_ADDR
