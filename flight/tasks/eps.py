@@ -74,17 +74,15 @@ class Task(TemplateTask):
     def read_fuel_gauge(self):
         # read values from MAX17205
         fuel_gauge = SATELLITE.FUEL_GAUGE
-        if fuel_gauge is not None:
-            self.log_data[EPS_IDX.BATTERY_PACK_REPORTED_SOC] = int(fuel_gauge.read_soc())
-            self.log_data[EPS_IDX.BATTERY_PACK_REPORTED_CAPACITY] = int(fuel_gauge.read_capacity())
-            self.log_data[EPS_IDX.BATTERY_PACK_CURRENT] = int(fuel_gauge.read_current())
-            self.log_data[EPS_IDX.BATTERY_PACK_VOLTAGE] = int(fuel_gauge.read_voltage())
-            self.log_data[EPS_IDX.BATTERY_PACK_MIDPOINT_VOLTAGE] = int(fuel_gauge.read_midvoltage())
-            self.log_data[EPS_IDX.BATTERY_PACK_TTE] = int(fuel_gauge.read_tte())
-            self.log_data[EPS_IDX.BATTERY_PACK_TTF] = int(fuel_gauge.read_ttf())
-            return True
-        else:
-            return False
+        self.log_data[EPS_IDX.BATTERY_PACK_REPORTED_SOC] = fuel_gauge.read_soc()
+        self.log_data[EPS_IDX.BATTERY_PACK_REPORTED_CAPACITY] = fuel_gauge.read_capacity()
+        self.log_data[EPS_IDX.BATTERY_PACK_CURRENT] = fuel_gauge.read_current()
+        self.log_data[EPS_IDX.BATTERY_PACK_VOLTAGE] = fuel_gauge.read_voltage()
+        self.log_data[EPS_IDX.BATTERY_PACK_MIDPOINT_VOLTAGE] = fuel_gauge.read_midvoltage()
+        self.log_data[EPS_IDX.BATTERY_CYCLES] = fuel_gauge.read_cycles()
+        self.log_data[EPS_IDX.BATTERY_PACK_TTE] = fuel_gauge.read_tte()
+        self.log_data[EPS_IDX.BATTERY_PACK_TTF] = fuel_gauge.read_ttf()
+        self.log_data[EPS_IDX.BATTERY_TIME_SINCE_POWER_UP] = fuel_gauge.read_time_pwrup()
 
     async def main_task(self):
         if SM.current_state == STATES.STARTUP:
@@ -100,6 +98,7 @@ class Task(TemplateTask):
             # Get power system readings
 
             self.log_data[EPS_IDX.TIME_EPS] = int(time.time())
+
 
             for key in SATELLITE.POWER_MONITORS:
                 if key == "BOARD":
@@ -121,12 +120,16 @@ class Task(TemplateTask):
                         + f"Radio Current: {self.log_data[EPS_IDX.RF_LDO_OUTPUT_CURRENT]} mA"
                     )
 
-            if self.read_fuel_gauge():
-                self.log_info(f"Battery Pack Reported SOC: {self.log_data[EPS_IDX.BATTERY_PACK_REPORTED_SOC]}% ")
-                self.log_info(f"Battery Pack Reported Capacity: {self.log_data[EPS_IDX.BATTERY_PACK_REPORTED_CAPACITY]} mAh ")
-                self.log_info(f"Battery Pack Current: {self.log_data[EPS_IDX.BATTERY_PACK_CURRENT]} mA ")
-                self.log_info(f"Battery Pack Voltage: {self.log_data[EPS_IDX.BATTERY_PACK_VOLTAGE]} mV ")
-                self.log_info(f"Battery Pack Midpoint Voltage: {self.log_data[EPS_IDX.BATTERY_PACK_MIDPOINT_VOLTAGE]} mV ")
-                self.log_info(f"Battery Pack Time-to-Empty: {self.log_data[EPS_IDX.BATTERY_PACK_TTE]} seconds ")
-                self.log_info(f"Battery Pack Time-to-Full {self.log_data[EPS_IDX.BATTERY_PACK_TTF]} seconds ")
+            self.read_fuel_gauge()
             DH.log_data("eps", self.log_data)
+            self.log_info(
+                f"Battery Pack Reported SOC: {self.log_data[EPS_IDX.BATTERY_PACK_REPORTED_SOC]}%, "
+                + f"Battery Pack Reported Capacity: {self.log_data[EPS_IDX.BATTERY_PACK_REPORTED_CAPACITY]} mAh, "
+                + f"Battery Pack Current: {self.log_data[EPS_IDX.BATTERY_PACK_CURRENT]} mA, "
+                + f"Battery Pack Voltage: {self.log_data[EPS_IDX.BATTERY_PACK_VOLTAGE]} mV, "
+                + f"Battery Pack Midpoint Voltage: {self.log_data[EPS_IDX.BATTERY_PACK_MIDPOINT_VOLTAGE]} mV, "
+                + f"Battery Cycles: {self.log_data[EPS_IDX.BATTERY_CYCLES]} cycles, "
+                + f"Battery Pack Time-to-Empty: {self.log_data[EPS_IDX.BATTERY_PACK_TTE]} seconds, "
+                + f"Battery Pack Time-to-Full {self.log_data[EPS_IDX.BATTERY_PACK_TTF]} seconds, "
+                + f"Battery Pack Time Since Power Up {self.log_data[EPS_IDX.BATTERY_TIME_SINCE_POWER_UP]} seconds"
+            )
