@@ -17,4 +17,6 @@ SimulatedSpacecraft: Simulator = None
 if SIMULATION:
     SimulatedSpacecraft = Simulator()
 
-SATELLITE: CubeSat = EmulatedSatellite(debug=DEBUG_MODE, simulator=SimulatedSpacecraft, use_socket=SOCKET_RADIO)
+SATELLITE: CubeSat = EmulatedSatellite(
+    debug=DEBUG_MODE, simulator=SimulatedSpacecraft, use_socket=SOCKET_RADIO
+)
