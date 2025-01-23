@@ -15,6 +15,7 @@ FILE_PKTSIZE = 240
 
 
 # Internal comms states for statechart
+# Internal comms states for statechart
 class COMMS_STATE:
     TX_HEARTBEAT = 0x01
 
@@ -24,12 +25,18 @@ class COMMS_STATE:
 
     TX_FRAME = 0x04
 
-    TX_FILEPKT = 0x05
+    TX_FILEPKT  = 0x05
     TX_METADATA = 0x06
 
 
 # Message ID database for communication protocol
+# Message ID database for communication protocol
 class MSG_ID:
+    """
+    Comms message IDs that are downlinked during the mission
+    """
+
+    # SAT heartbeat, nominally downlinked in orbit
     """
     Comms message IDs that are downlinked during the mission
     """
@@ -46,8 +53,33 @@ class MSG_ID:
     SAT_ACK = 0x0F
 
     # SAT file metadata and file content messages
+    # SAT TM frames, requested by GS
+    SAT_TM_HAL = 0x02
+    SAT_TM_STORAGE = 0x03
+    SAT_TM_PAYLOAD = 0x04
+
+    # SAT ACK, in response to GS commands
+    SAT_ACK = 0x0F
+
+    # SAT file metadata and file content messages
     SAT_FILE_METADATA = 0x10
     SAT_FILE_PKT = 0x20
+
+    """
+    Comms internal state management uses ranges of GS command IDs
+    """
+
+    # GS commands SC responds to with an ACK
+    GS_CMD_ACK_L = 0x40
+    GS_CMD_ACK_H = 0x45
+
+    # GS commands SC responds to with a frame
+    GS_CMD_FRM_L = 0x46
+    GS_CMD_FRM_H = 0x49
+
+    # GS commands SC responds to with file MD or packets
+    GS_CMD_FILE_METADATA = 0x4A
+    GS_CMD_FILE_PKT = 0x4B
 
     """
     Comms internal state management uses ranges of GS command IDs
@@ -302,9 +334,76 @@ class SATELLITE_RADIO:
         cls.file_get_metadata()
 
         # TODO: Rework to use class file array
-        cls.file_md = (
-            cls.file_ID.to_bytes(1, "big") + cls.file_size.to_bytes(4, "big") + cls.file_message_count.to_bytes(2, "big")
-        )
+        return cls.file_ID.to_bytes(1, "big") + cls.file_size.to_bytes(4, "big") + cls.file_message_count.to_bytes(2, "big")
+
+    """
+        Name: data_available
+        Description: Check if data is available in FIFO buffer
+    """
+
+    @classmethod
+    def data_available(cls):
+        return SATELLITE.RADIO.RX_available()
+
+    """
+        Name: receive_message
+        Description: Receive and unpack message from GS
+    """
+
+    @classmethod
+    def receive_message(cls):
+        # Get packet from radio over SPI
+        # Assumes packet is in FIFO buffer
+
+        packet, err = SATELLITE.RADIO.recv(len=0, timeout_en=True, timeout_ms=1000)
+
+        if packet is None:
+            # FIFO buffer does not contain a packet
+            cls.gs_req_message_ID = 0x00
+
+            return cls.gs_req_message_ID
+
+        cls.rx_message_rssi = SATELLITE.RADIO.rssi()
+
+        # Check CRC error on received packet
+        crc_check = 0
+
+        # Increment internal CRC count
+        if crc_check > 0:
+            cls.crc_count += 1
+
+        # Unpack RX message header
+        cls.rx_message_ID = int.from_bytes(packet[0:1], "big")
+        cls.rx_message_sequence_count = int.from_bytes(packet[1:3], "big")
+        cls.rx_message_size = int.from_bytes(packet[3:4], "big")
+
+        if cls.rx_message_ID == MSG_ID.GS_ACK:
+            # GS acknowledged and sent command
+            cls.gs_rx_message_ID = int.from_bytes(packet[4:5], "big")
+            cls.gs_req_message_ID = int.from_bytes(packet[5:6], "big")
+            cls.gs_req_seq_count = int.from_bytes(packet[6:8], "big")
+
+            # Verify GS RX message ID with previously transmitted message ID
+            if cls.tx_message_ID != cls.gs_rx_message_ID:
+                # RX ID mismatch, reset GS RQ'd ID
+                logger.warning(f"[COMMS ERROR] GS received {cls.gs_rx_message_ID}")
+                cls.gs_req_message_ID = 0x00
+
+                return cls.gs_req_message_ID
+
+            # Verify CRC count was 0 for last received message
+            if cls.crc_count > 0:
+                # CRC error, reset GS RQ'd ID
+                logger.warning("[COMMS ERROR] CRC error occured")
+                cls.gs_req_message_ID = 0x00
+
+                return cls.gs_req_message_ID
+
+        else:
+            # Unknown message ID, reset GS RQ' ID
+            cls.gs_req_message_ID = 0x00
+
+        return cls.gs_req_message_ID
 
     """
         Name: transmit_file_metadata
