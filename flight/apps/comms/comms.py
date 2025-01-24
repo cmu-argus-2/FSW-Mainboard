@@ -174,17 +174,21 @@ class SATELLITE_RADIO:
                 # Lost contact with GS, return to default state
                 cls.state = COMMS_STATE.TX_HEARTBEAT
 
-            # Transitions based on GS ACKs
-            elif cls.rx_gs_cmd == MSG_ID.SAT_HEARTBEAT:
-                # Send latest TM frame
-                cls.state = COMMS_STATE.TX_HEARTBEAT
+            # Transitions based on GS CMDs
+            elif cls.rx_gs_cmd >= MSG_ID.GS_CMD_ACK_L and cls.rx_gs_cmd <= MSG_ID.GS_CMD_ACK_H:
+                # GS CMD requires an ACK in response
+                cls.state = COMMS_STATE.TX_ACK
 
-            elif cls.rx_gs_cmd == MSG_ID.SAT_FILE_METADATA:
-                # Send file metadata
+            elif cls.rx_gs_cmd >= MSG_ID.GS_CMD_FRM_L and cls.rx_gs_cmd <= MSG_ID.GS_CMD_FRM_H:
+                # GS CMD requires a frame in response
+                cls.state = COMMS_STATE.TX_FRAME
+
+            elif cls.rx_gs_cmd == MSG_ID.GS_CMD_FILE_METADATA:
+                # GS CMD requires file metadata in response
                 cls.state = COMMS_STATE.TX_METADATA
 
-            elif cls.rx_gs_cmd == MSG_ID.SAT_FILE_PKT:
-                # Send file packet with specified sequence count
+            elif cls.rx_gs_cmd == MSG_ID.GS_CMD_FILE_PKT:
+                # GS CMD requires a file packet in response
                 cls.state = COMMS_STATE.TX_FILEPKT
 
             else:
@@ -308,49 +312,6 @@ class SATELLITE_RADIO:
         # TODO: Rework to use class file array
         # TODO: Rework to use class file array
         return cls.file_ID.to_bytes(1, "big") + cls.file_size.to_bytes(4, "big") + cls.file_message_count.to_bytes(2, "big")
-
-    """
-        Name: data_available
-        Description: Check if data is available in FIFO buffer
-    """
-
-    @classmethod
-    def data_available(cls):
-        return SATELLITE.RADIO.RX_available()
-
-    """
-        Name: receive_message
-        Description: Receive and unpack message from GS
-    """
-
-    @classmethod
-    def receive_message(cls):
-        # Get packet from radio over SPI
-        # Assumes packet is in FIFO buffer
-
-        packet, err = SATELLITE.RADIO.recv(len=0, timeout_en=True, timeout_ms=1000)
-
-        if packet is None:
-            # FIFO buffer does not contain a packet
-            cls.rx_gs_cmd = 0x00
-
-            return cls.rx_gs_cmd
-
-        cls.rx_message_rssi = SATELLITE.RADIO.rssi()
-
-        # Check CRC error on received packet
-        crc_check = 0
-
-        # Increment internal CRC count
-        if crc_check > 0:
-            cls.crc_count += 1
-
-        # Unpack RX message header
-        cls.rx_gs_cmd = int.from_bytes(packet[0:1], "big")
-        cls.rx_gs_sq_cnt = int.from_bytes(packet[1:3], "big")
-        cls.rx_gs_len = int.from_bytes(packet[3:4], "big")
-
-        return cls.rx_gs_cmd
 
     """
         Name: transmit_file_metadata
