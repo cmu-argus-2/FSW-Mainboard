@@ -7,7 +7,7 @@ import time
 
 import apps.command.processor as processor
 from apps.adcs.modes import Modes
-from apps.command import COMMAND_FORCE_STATE, CommandQueue
+from apps.command import CommandQueue, QUEUE_STATUS
 from apps.command.constants import CMD_ID
 from apps.command.processor import handle_command_execution_status, process_command
 from apps.telemetry.constants import ADCS_IDX, CDH_IDX
@@ -101,14 +101,7 @@ class Task(TemplateTask):
             elif SM.current_state == STATES.LOW_POWER:
                 pass
 
-            # Update variables to stay in state for a forced switch to state command
-            if COMMAND_FORCE_STATE.get_force_state():
-                if COMMAND_FORCE_STATE.get_time_in_state() > 0:
-                    COMMAND_FORCE_STATE.set_time_in_state(COMMAND_FORCE_STATE.get_time_in_state() - 1)
-                    self.log_info(f"FORCED STATE - Time_in_state (remaining time): {COMMAND_FORCE_STATE.get_time_in_state()}")
-                else:
-                    COMMAND_FORCE_STATE.set_force_state(False)
-                    self.log_info("STATE is no longer FORCED")
+            SM.update_time_in_state()
 
             ### COMMAND PROCESSING ###
 
@@ -127,7 +120,7 @@ class Task(TemplateTask):
                 else:
                     cmd_args = []
 
-                if queue_error_code == 0:
+                if queue_error_code == QUEUE_STATUS.OK:
                     self.log_info(f"Processing command: {cmd_id} with args: {cmd_args}")
                     status, response_args = processor.process_command(cmd_id, *cmd_args)
                     processor.handle_command_execution_status(status, response_args)

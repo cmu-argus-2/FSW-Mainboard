@@ -1,6 +1,6 @@
 import pytest
 
-from flight.apps.command.fifo import QUEUE_STATUS, CommandQueue
+from flight.apps.command.fifo import CommandQueue, QUEUE_STATUS
 
 
 @pytest.fixture
@@ -23,6 +23,7 @@ def test_push_command_success(setup_queue):
     queue = setup_queue
     result = queue.push_command(0x01, ["arg1"])
     assert result == QUEUE_STATUS.OK
+    assert result == QUEUE_STATUS.OK
     assert queue.get_size() == 1
 
 
@@ -32,6 +33,7 @@ def test_push_command_overflow(setup_queue):
         queue.push_command(i, [f"arg{i}"])
     result = queue.push_command(0x06, ["overflow_arg"])
     assert result == QUEUE_STATUS.OVERFLOW
+    assert result == QUEUE_STATUS.OVERFLOW
     assert queue.get_size() == 5
 
 
@@ -40,6 +42,7 @@ def test_pop_command_success(setup_queue):
     queue.push_command(0x01, ["arg1"])
     cmd, status = queue.pop_command()
     assert status == QUEUE_STATUS.OK
+    assert status == QUEUE_STATUS.OK
     assert cmd == (0x01, ["arg1"])
     assert queue.is_empty()
 
@@ -47,6 +50,7 @@ def test_pop_command_success(setup_queue):
 def test_pop_command_empty(setup_queue):
     queue = setup_queue
     cmd, status = queue.pop_command()
+    assert status == QUEUE_STATUS.EMPTY
     assert status == QUEUE_STATUS.EMPTY
     assert cmd is None
 
@@ -81,6 +85,5 @@ def test_overwrite_command(setup_single_element_queue):
     queue.overwrite_command(0x02, ["arg2"])
     assert queue.get_size() == 1
     cmd, status = queue.pop_command()
-    assert status == QUEUE_STATUS.OK
     assert status == QUEUE_STATUS.OK
     assert cmd == (0x02, ["arg2"])
