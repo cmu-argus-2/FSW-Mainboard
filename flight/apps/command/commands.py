@@ -27,6 +27,28 @@ from core import state_manager as SM
 from core.states import STR_STATES
 
 
+# Ensures that SWITCH_TO_STATE Command is enforced and maintains values to do so
+class COMMAND_FORCE_STATE:
+    force_state = False
+    time_in_state = 0
+
+    @classmethod
+    def set_force_state(cls, value):
+        cls.force_state = value
+
+    @classmethod
+    def get_force_state(cls):
+        return cls.force_state
+
+    @classmethod
+    def set_time_in_state(cls, time):
+        cls.time_in_state = time
+
+    @classmethod
+    def get_time_in_state(cls):
+        return cls.time_in_state
+
+
 def FORCE_REBOOT():
     """Forces a power cycle of the spacecraft."""
     logger.info("Executing FORCE_REBOOT")
