@@ -112,22 +112,12 @@ class Task(TemplateTask):
             # Read packet present in the RX buffer
             self.rq_cmd = SATELLITE_RADIO.receive_message()
 
-            # State transition based on RX'd packet
-            SATELLITE_RADIO.transition_state(False)
-            self.comms_state = SATELLITE_RADIO.get_state()
-
             # Check the response from the GS
             if self.rq_cmd != 0x00:
             if self.rq_cmd != 0x00:
                 # GS requested valid message ID
                 self.log_info(f"RX message RSSI: {SATELLITE_RADIO.get_rssi()}")
                 self.log_info(f"GS requested command: {self.rq_cmd}")
-
-                # Get most recent payload
-                self.rx_payload = SATELLITE_RADIO.get_rx_payload()
-
-                # Push rq_cmd onto CommandQueue along with all its arguments
-                CommandQueue.overwrite_command(self.rq_cmd, self.rx_payload)
 
                 # Get most recent payload
                 self.rx_payload = SATELLITE_RADIO.get_rx_payload()
@@ -148,7 +138,7 @@ class Task(TemplateTask):
                 self.log_warning(f"GS requested invalid command: {self.rq_cmd}")
 
         else:
-            # TODO: Move threshold logic into state transition fn
+            # Increment RX counter
             self.RX_COUNTER += 1
 
             # Force RX message ID to be 0x00 for state machine

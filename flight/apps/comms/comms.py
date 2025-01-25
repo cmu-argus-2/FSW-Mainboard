@@ -131,12 +131,10 @@ class SATELLITE_RADIO:
         if cls.state == COMMS_STATE.RX:
             # State transitions to TX states only occur from RX state
 
-            # TODO: Replace with RX threshold
-            if timeout:
+            if rx_count >= rx_threshold:
                 # Lost contact with GS, return to default state
                 cls.state = COMMS_STATE.TX_HEARTBEAT
 
-            # Transitions based on GS CMDs
             elif cls.rx_gs_cmd >= MSG_ID.GS_CMD_ACK_L and cls.rx_gs_cmd <= MSG_ID.GS_CMD_ACK_H:
                 # GS CMD requires an ACK in response
                 cls.state = COMMS_STATE.TX_ACK
@@ -304,7 +302,9 @@ class SATELLITE_RADIO:
         cls.file_get_metadata()
 
         # TODO: Rework to use class file array
-        return cls.file_ID.to_bytes(1, "big") + cls.file_size.to_bytes(4, "big") + cls.file_message_count.to_bytes(2, "big")
+        cls.file_md = (
+            cls.file_ID.to_bytes(1, "big") + cls.file_size.to_bytes(4, "big") + cls.file_message_count.to_bytes(2, "big")
+        )
 
     """
         Name: transmit_file_metadata
