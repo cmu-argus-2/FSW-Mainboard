@@ -1,5 +1,5 @@
 # Communication task which uses the radio to transmit and receive messages.
-from apps.command import CommandQueue
+from apps.command import CommandQueue, ResponseQueue, QUEUE_STATUS
 from apps.comms.comms import COMMS_STATE, SATELLITE_RADIO
 from apps.telemetry import TelemetryPacker
 from core import TemplateTask
@@ -126,7 +126,7 @@ class Task(TemplateTask):
                 # Get most recent payload
                 self.rx_payload = SATELLITE_RADIO.get_rx_payload()
 
-                # TODO: Push rq_cmd onto CommandQueue along with all its arguments
+                # Push rq_cmd onto CommandQueue along with all its arguments
                 CommandQueue.overwrite_command(self.rq_cmd, self.rx_payload)
 
                 # Get most recent payload

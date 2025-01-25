@@ -434,7 +434,7 @@ class SATELLITE_RADIO:
 
         elif cls.state == COMMS_STATE.TX_ACK:
             # Transmit SAT ACK
-            cls.tx_message = bytes([MSG_ID.SAT_ACK, 0x00, 0x00, 0x01, 0x00])
+            cls.tx_message = bytes([MSG_ID.SAT_ACK, 0x00, 0x00, 0x01, cls.tx_ack])
 
         elif cls.state == COMMS_STATE.TX_FRAME:
             # Transmit a specific TM frame
