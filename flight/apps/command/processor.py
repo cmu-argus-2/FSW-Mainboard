@@ -39,7 +39,6 @@ from apps.command.commands import (
     UPLINK_TIME_REFERENCE,
 )
 from apps.command.constants import CMD_ID
-from apps.command.preconditions import file_id_exists, valid_time_format
 from core import logger
 from micropython import const
 
@@ -53,13 +52,8 @@ from micropython import const
 COMMANDS = [
     (CMD_ID.FORCE_REBOOT, lambda: True, [], FORCE_REBOOT),
     (CMD_ID.SWITCH_TO_STATE, lambda: True, ["target_state_id", "time_in_state"], SWITCH_TO_STATE),
-    (CMD_ID.UPLINK_TIME_REFERENCE, valid_time_format, ["time_reference"], UPLINK_TIME_REFERENCE),
-    (
-        CMD_ID.UPLINK_ORBIT_REFERENCE,
-        valid_time_format,
-        ["time_reference", "orbital_parameters"],
-        UPLINK_ORBIT_REFERENCE,
-    ),
+    (CMD_ID.UPLINK_TIME_REFERENCE, lambda: True, ["time_in_state"], UPLINK_TIME_REFERENCE),
+    (CMD_ID.UPLINK_ORBIT_REFERENCE, lambda: True, ["time_in_state", "orbital_parameters"], UPLINK_ORBIT_REFERENCE),
     (CMD_ID.TURN_OFF_PAYLOAD, lambda: True, [], TURN_OFF_PAYLOAD),
     (CMD_ID.SCHEDULE_OD_EXPERIMENT, lambda: True, [], SCHEDULE_OD_EXPERIMENT),
     (CMD_ID.REQUEST_TM_HEARTBEAT, lambda: True, [], REQUEST_TM_HEARTBEAT),
@@ -68,13 +62,12 @@ COMMANDS = [
     (CMD_ID.REQUEST_TM_PAYLOAD, lambda: True, [], REQUEST_TM_PAYLOAD),
     (
         CMD_ID.REQUEST_FILE_METADATA,
-        file_id_exists,
-        ["file_id", "file_time"],
+        lambda file_tag, requested_time: True,
+        ["file_tag", "requested_time"],
         REQUEST_FILE_METADATA,
     ),
-    (CMD_ID.REQUEST_FILE_PKT, lambda: True, ["file_id", "file_time", "rq_sq_cnt"], REQUEST_FILE_PKT),
+    (CMD_ID.REQUEST_FILE_PKT, lambda file_tag: True, ["file_tag"], REQUEST_FILE_PKT),
     (CMD_ID.REQUEST_IMAGE, lambda: True, [], REQUEST_IMAGE),
-    (CMD_ID.DOWNLINK_ALL, lambda: True, [], DOWNLINK_ALL),
 ]
 
 
