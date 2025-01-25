@@ -1,6 +1,6 @@
 import pytest
 
-from flight.apps.command.fifo import QUEUE_STATUS, CommandQueue
+from flight.apps.command.fifo import CommandQueue, QUEUE_STATUS
 
 
 @pytest.fixture
@@ -81,5 +81,6 @@ def test_overwrite_command(setup_single_element_queue):
     queue.overwrite_command(0x02, ["arg2"])
     assert queue.get_size() == 1
     cmd, status = queue.pop_command()
+    assert status == QUEUE_STATUS.OK
     assert status == QUEUE_STATUS.OK
     assert cmd == (0x02, ["arg2"])
