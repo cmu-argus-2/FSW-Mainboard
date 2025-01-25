@@ -6,7 +6,7 @@ import gc
 import time
 
 from apps.adcs.modes import Modes
-from apps.command import COMMAND_FORCE_STATE, CommandQueue
+from apps.command import CommandQueue, QUEUE_STATUS
 from apps.command.constants import CMD_ID
 from apps.command.processor import handle_command_execution_status, process_command
 from apps.telemetry.constants import ADCS_IDX, CDH_IDX
@@ -75,14 +75,16 @@ class Task(TemplateTask):
                 # CommandQueue.push_command(0x02, [])
 
                 # Testing single-element queue
-                # CommandQueue.overwrite_command(0x41,[STATES.LOW_POWER, 0x00])
-                # CommandQueue.overwrite_command(0x41,[STATES.DETUMBLING, 0x0A])  #should only execute this with overwrite
-                # CommandQueue.overwrite_command(0x40,[]) # testing forced reboot
+                # CommandQueue.overwrite_command(0x01,[STATES.LOW_POWER, 0x00])
+                # CommandQueue.overwrite_command(0x41,[STATES.DETUMBLING, 0x00])  #should only execute this with overwrite
         else:  # Run for all other states
             ### STATE MACHINE ###
             if SM.current_state == STATES.DETUMBLING:
                 # Check detumbling status from the ADCS
                 if DH.data_process_exists("adcs"):
+                    if DH.get_latest_data("adcs")[ADCS_IDX.MODE] != Modes.TUMBLING:
+                        self.log_info("Detumbling complete - Switching to NOMINAL state.")
+                        SM.switch_to(STATES.NOMINAL)
                     if DH.get_latest_data("adcs")[ADCS_IDX.MODE] != Modes.TUMBLING:
                         self.log_info("Detumbling complete - Switching to NOMINAL state.")
                         SM.switch_to(STATES.NOMINAL)
@@ -94,6 +96,8 @@ class Task(TemplateTask):
                     self.log_data[CDH_IDX.DETUMBLING_ERROR_FLAG] = 1
                     self.log_info("Switching to NOMINAL state after DETUMBLING timeout.")
                     SM.switch_to(STATES.NOMINAL)
+                    self.log_info("Switching to NOMINAL state after DETUMBLING timeout.")
+                    SM.switch_to(STATES.NOMINAL)
 
             elif SM.current_state == STATES.NOMINAL:
                 pass
@@ -102,14 +106,7 @@ class Task(TemplateTask):
             elif SM.current_state == STATES.LOW_POWER:
                 pass
 
-            # Update variables to stay in state for a forced switch to state command
-            if COMMAND_FORCE_STATE.get_force_state():
-                if COMMAND_FORCE_STATE.get_time_in_state() > 0:
-                    COMMAND_FORCE_STATE.set_time_in_state(COMMAND_FORCE_STATE.get_time_in_state() - 1)
-                    self.log_info(f"FORCED STATE - Time_in_state (remaining time): {COMMAND_FORCE_STATE.get_time_in_state()}")
-                else:
-                    COMMAND_FORCE_STATE.set_force_state(False)
-                    self.log_info("STATE is no longer FORCED")
+            SM.update_time_in_state()
 
             ### COMMAND PROCESSING ###
 
@@ -128,7 +125,7 @@ class Task(TemplateTask):
                 else:
                     cmd_args = []
 
-                if queue_error_code == 0:
+                if queue_error_code == QUEUE_STATUS.OK:
                     self.log_info(f"Processing command: {cmd_id} with args: {cmd_args}")
                     status, response_args = process_command(cmd_id, *cmd_args)
 
