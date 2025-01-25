@@ -80,10 +80,8 @@ class Task(TemplateTask):
             self.log_data[EPS_IDX.BATTERY_PACK_CURRENT] = int(fuel_gauge.read_current())
             self.log_data[EPS_IDX.BATTERY_PACK_VOLTAGE] = int(fuel_gauge.read_voltage())
             self.log_data[EPS_IDX.BATTERY_PACK_MIDPOINT_VOLTAGE] = int(fuel_gauge.read_midvoltage())
-            self.log_data[EPS_IDX.BATTERY_CYCLES] = int(fuel_gauge.read_cycles())
             self.log_data[EPS_IDX.BATTERY_PACK_TTE] = int(fuel_gauge.read_tte())
             self.log_data[EPS_IDX.BATTERY_PACK_TTF] = int(fuel_gauge.read_ttf())
-            self.log_data[EPS_IDX.BATTERY_TIME_SINCE_POWER_UP] = int(fuel_gauge.read_time_pwrup())
             return True
         else:
             return False
@@ -94,7 +92,7 @@ class Task(TemplateTask):
 
         else:
             if not DH.data_process_exists("eps"):
-                data_format = "Lhhb" + "h" * 5 + "L" * 2 + "h" * 31  # - use mV for voltage and mA for current (h = short integer 2 bytes, L = 4 bytes)
+                data_format = "Lhhb" + "h" * 4 + "L" * 2 + "h" * 30  # - use mV for voltage and mA for current (h = short integer 2 bytes, L = 4 bytes)
                 DH.register_data_process("eps", data_format, True, data_limit=100000)
 
             # Get power system readings
@@ -128,8 +126,6 @@ class Task(TemplateTask):
                 self.log_info(f"Battery Pack Current: {self.log_data[EPS_IDX.BATTERY_PACK_CURRENT]} mA ")
                 self.log_info(f"Battery Pack Voltage: {self.log_data[EPS_IDX.BATTERY_PACK_VOLTAGE]} mV ")
                 self.log_info(f"Battery Pack Midpoint Voltage: {self.log_data[EPS_IDX.BATTERY_PACK_MIDPOINT_VOLTAGE]} mV ")
-                self.log_info(f"Battery Cycles: {self.log_data[EPS_IDX.BATTERY_CYCLES]} cycles ")
                 self.log_info(f"Battery Pack Time-to-Empty: {self.log_data[EPS_IDX.BATTERY_PACK_TTE]} seconds ")
                 self.log_info(f"Battery Pack Time-to-Full {self.log_data[EPS_IDX.BATTERY_PACK_TTF]} seconds ")
-                self.log_info(f"Battery Pack Time Since Power Up {self.log_data[EPS_IDX.BATTERY_TIME_SINCE_POWER_UP]} seconds ")
             DH.log_data("eps", self.log_data)
