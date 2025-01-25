@@ -20,7 +20,7 @@ class StateManager:
         "__previous_state",
         "__time_since_last_state_change",
         "__force_state",
-        "__time_in_state"
+        "__time_in_state",
     )
 
     def __new__(cls, *args, **kwargs):
@@ -29,7 +29,6 @@ class StateManager:
         return cls._instance
 
     def __init__(self):
-
         self.__current_state = None
         self.__scheduled_tasks = {}
         self.__initialized = False
@@ -85,12 +84,12 @@ class StateManager:
         if new_state_id not in self.__states:
             logger.critical(f"State {new_state_id} is not in the list of states")
             raise ValueError(f"State {new_state_id} is not in the list of states")
-        
+
         if self.__force_state:
             # cannot allow switching since we are forcing the state
             logger.info(f"Cannot switch to {STR_STATES[new_state_id]}, forced time remaining in state: {self.__time_in_state}")
             return
-        
+
         if self.__initialized:
             # prevent illegal transitions
             if not (new_state_id in STATES.TRANSITIONS[self.__current_state]):
@@ -109,7 +108,6 @@ class StateManager:
         self.__scheduled_tasks = {}  # Reset
 
         for task_id, task_params in self.__task_config.items():
-
             if "ScheduleLater" in task_params:
                 schedule = scheduler.schedule_later
             else:
@@ -140,14 +138,14 @@ class StateManager:
         """Changes the frequency of a task"""
         self.__scheduled_tasks[task_id].change_rate(freq_hz)
         logger.info(f"Task {task_id} frequency changed to {freq_hz}")
-    
+
     def start_forced_state(self, target_state_id, time_in_state):
-        """ Ensures that SWITCH_TO_STATE Command is enforced and maintains values to do so """
+        """Ensures that SWITCH_TO_STATE Command is enforced and maintains values to do so"""
         self.switch_to(target_state_id)
         if time_in_state > 0:
             self.__force_state = True
             self.__time_in_state = time_in_state
-    
+
     def update_time_in_state(self):
         # Update variables to stay in state for a forced switch to state command
         if self.__force_state:

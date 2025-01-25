@@ -17,7 +17,6 @@ from hal.configuration import SATELLITE
 
 
 class Task(TemplateTask):
-
     # To be removed
     # data_keys = ["TIME", "SC_STATE", "SD_USAGE", "CURRENT_RAM_USAGE", "REBOOT_COUNT",
     # "WATCHDOG_TIMER", "HAL_BITFLAGS", "DETUMBLING_ERROR_FLAG"]
@@ -39,7 +38,6 @@ class Task(TemplateTask):
         return int(gc.mem_alloc() / self.total_memory * 100)
 
     async def main_task(self):
-
         if SM.current_state == STATES.STARTUP:
             # Must perform / check all startup tasks here (rtc, sd, etc.)
 
@@ -60,7 +58,6 @@ class Task(TemplateTask):
             # HAL_DIAGNOSTICS
             time_since_boot = int(time.time()) - SATELLITE.BOOTTIME
             if DH.SD_SCANNED() and time_since_boot > 5:  # seconds into start-up
-
                 if not DH.data_process_exists("cdh"):
                     data_format = "LbLbbbbb"
                     DH.register_data_process("cdh", data_format, True, data_limit=100000)
@@ -80,7 +77,6 @@ class Task(TemplateTask):
                 # CommandQueue.overwrite_command(0x41,[STATES.DETUMBLING, 0x0A])  #should only execute this with overwrite
                 # CommandQueue.overwrite_command(0x40,[]) # testing forced reboot
         else:  # Run for all other states
-
             ### STATE MACHINE ###
             if SM.current_state == STATES.DETUMBLING:
                 # Check detumbling status from the ADCS
@@ -102,9 +98,9 @@ class Task(TemplateTask):
             elif SM.current_state == STATES.EXPERIMENT:
                 pass
             elif SM.current_state == STATES.LOW_POWER:
-                pass   
+                pass
 
-            SM.update_time_in_state()                
+            SM.update_time_in_state()
 
             ### COMMAND PROCESSING ###
 

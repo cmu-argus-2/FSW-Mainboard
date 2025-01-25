@@ -20,12 +20,11 @@ Author: Ibrahima S. Sow
 
 """
 
+import supervisor
 from apps.telemetry import TelemetryPacker
 from core import logger
 from core import state_manager as SM
 from core.states import STR_STATES
-
-import supervisor
 
 
 def FORCE_REBOOT():

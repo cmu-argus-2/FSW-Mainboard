@@ -96,7 +96,6 @@ class Task(TemplateTask):
         if SATELLITE_RADIO.data_available():
             # Read packet present in the RX buffer
             self.rq_cmd = SATELLITE_RADIO.receive_message()
-            self.rq_cmd = SATELLITE_RADIO.receive_message()
 
             # State transition based on RX'd packet
             SATELLITE_RADIO.transition_state(False)
@@ -104,13 +103,8 @@ class Task(TemplateTask):
 
             # Check the response from the GS
             if self.rq_cmd != 0x00:
-            if self.rq_cmd != 0x00:
                 # GS requested valid message ID
                 self.log_info(f"RX message RSSI: {SATELLITE_RADIO.get_rssi()}")
-                self.log_info(f"GS requested command: {self.rq_cmd}")
-
-                # TODO: Push rq_cmd onto CommandQueue along with all its arguments
-                # CommandQueue.push_command(0x01, [])
                 self.log_info(f"GS requested command: {self.rq_cmd}")
 
                 # TODO: Push rq_cmd onto CommandQueue along with all its arguments
@@ -124,10 +118,8 @@ class Task(TemplateTask):
             else:
                 # GS requested invalid message ID
                 self.log_warning(f"GS requested invalid command: {self.rq_cmd}")
-                self.log_warning(f"GS requested invalid command: {self.rq_cmd}")
 
         else:
-            # TODO: Move threshold logic into state transition fn
             # TODO: Move threshold logic into state transition fn
             self.RX_COUNTER += 1
 
@@ -158,7 +150,6 @@ class Task(TemplateTask):
         #         self.log_info(f"Response: {response_id}, with args: {response_args}")
 
         if SM.current_state == STATES.DETUMBLING or SM.current_state == STATES.NOMINAL or SM.current_state == STATES.LOW_POWER:
-
             if not DH.data_process_exists("comms"):  # avoid registering in startup
                 DH.register_data_process("comms", "f", True, 100000)
 

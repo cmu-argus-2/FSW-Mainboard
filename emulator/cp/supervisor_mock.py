@@ -1,3 +1,3 @@
 def reload():
-    """ Mock function for supervisor.reload()"""
+    """Mock function for supervisor.reload()"""
     return
