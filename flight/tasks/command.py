@@ -84,17 +84,12 @@ class Task(TemplateTask):
                     if DH.get_latest_data("adcs")[ADCS_IDX.MODE] != Modes.TUMBLING:
                         self.log_info("Detumbling complete - Switching to NOMINAL state.")
                         SM.switch_to(STATES.NOMINAL)
-                    if DH.get_latest_data("adcs")[ADCS_IDX.MODE] != Modes.TUMBLING:
-                        self.log_info("Detumbling complete - Switching to NOMINAL state.")
-                        SM.switch_to(STATES.NOMINAL)
 
                 # Detumbling timeout in case the ADCS is not working
                 if SM.time_since_last_state_change > STATES.DETUMBLING_TIMEOUT_DURATION:
                     self.log_info("DETUMBLING timeout - Setting Detumbling Error Flag.")
                     # Set the detumbling issue flag in the NVM
                     self.log_data[CDH_IDX.DETUMBLING_ERROR_FLAG] = 1
-                    self.log_info("Switching to NOMINAL state after DETUMBLING timeout.")
-                    SM.switch_to(STATES.NOMINAL)
                     self.log_info("Switching to NOMINAL state after DETUMBLING timeout.")
                     SM.switch_to(STATES.NOMINAL)
 

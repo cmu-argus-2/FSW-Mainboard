@@ -29,12 +29,6 @@ class CommandQueue:
     _queue = []  # The list representing the queue.
     _max_size = 1  # The maximum size of the queue.
 
-    # Error codes
-    OK = const(0)  # Error code indicating successful operation.
-    OVERFLOW = const(1)  # Error code indicating the queue is full.
-    EMPTY = const(2)  # Error code indicating the queue is empty.
-    OVERWRITE = const(3)  # Error code indicating failure to overwrite a 1 element queue.
-
     @classmethod
     def configure(cls, max_size):
         """Configures the maximum size of the queue."""
@@ -95,12 +89,6 @@ class ResponseQueue:
 
     _queue = []  # The list representing the queue.
     _max_size = 1  # The maximum size of the queue.
-
-    # Error codes
-    OK = const(0)  # Error code indicating successful operation.
-    OVERFLOW = const(1)  # Error code indicating the queue is full.
-    EMPTY = const(2)  # Error code indicating the queue is empty.
-    OVERWRITE = const(3)  # Error code indicating failure to overwrite a 1 element queue.
 
     @classmethod
     def configure(cls, max_size):

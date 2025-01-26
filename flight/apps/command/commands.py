@@ -21,7 +21,6 @@ Author: Ibrahima S. Sow
 """
 
 import supervisor
-import supervisor
 from apps.telemetry import TelemetryPacker
 from core import logger
 from core import state_manager as SM
@@ -31,7 +30,6 @@ from core.states import STR_STATES
 def FORCE_REBOOT():
     """Forces a power cycle of the spacecraft."""
     logger.info("Executing FORCE_REBOOT")
-    supervisor.reload()
     supervisor.reload()
     # https://learn.adafruit.com/circuitpython-essentials/circuitpython-resetting
     return []

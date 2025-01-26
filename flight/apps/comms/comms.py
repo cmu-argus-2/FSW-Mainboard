@@ -97,7 +97,6 @@ class SATELLITE_RADIO:
     file_array = []
 
     # Last TX'd message parameters
-    # Last TX'd message parameters
     tx_message_ID = 0x00
     tx_message = []
     tx_ack = 0x04
@@ -113,16 +112,6 @@ class SATELLITE_RADIO:
 
     # RX'd payload contains GS arguments
     rx_payload = bytearray()
-
-    # RX'd RSSI logged for error checking
-    # RX'd ID is the latest GS command
-    rx_gs_cmd = 0x00
-
-    # RX'd SQ cnt used for packetized file TX
-    rx_gs_sq_cnt = 0
-
-    # RX'd len used for argument unpacking
-    rx_gs_len = 0
 
     # RX'd RSSI logged for error checking
     rx_message_rssi = 0
