@@ -183,16 +183,16 @@ class Task(TemplateTask):
         if not self.frequency_set:
             self.cls_change_counter_frequency()
 
-        if not self.filepath_flag:
-            if not DH.data_process_exists("img"):
-                # TODO: Move image process to another task
-                DH.register_data_process("img", "b", True)
+        if SM.current_state == STATES.DETUMBLING or SM.current_state == STATES.NOMINAL or SM.current_state == STATES.LOW_POWER:
+            if not DH.data_process_exists("comms"):  # avoid registering in startup
+                DH.register_data_process("comms", "f", True, 100000)
 
-            # Set filepath for comms TX file
-            filepath = DH.request_TM_path_image()
-            SATELLITE_RADIO.set_filepath(filepath)
-            
-            self.log_info(f"Initializing TX file filepath: {filepath}")
+            if DH.image_process_exists():
+                # registration is done on the payload task
+                # Set filepath for comms TX file
+                filepath = DH.request_TM_path_image()
+                SATELLITE_RADIO.set_filepath(filepath)
+                self.log_info(f"Initializing TX file filepath: {filepath}")
 
             self.filepath_flag = True
 
