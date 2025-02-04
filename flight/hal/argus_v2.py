@@ -267,10 +267,7 @@ class ArgusV2Components:
 
 class ArgusV2(CubeSat):
     """ArgusV2: Represents the Argus V2 CubeSat."""
-    """ArgusV2: Represents the Argus V2 CubeSat."""
 
-    def __init__(self, debug: bool = False):
-        """__init__: Initializes the Argus V2 CubeSat."""
     def __init__(self, debug: bool = False):
         """__init__: Initializes the Argus V2 CubeSat."""
         self.__debug = debug

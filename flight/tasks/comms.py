@@ -114,7 +114,6 @@ class Task(TemplateTask):
 
             # Check the response from the GS
             if self.rq_cmd != 0x00:
-            if self.rq_cmd != 0x00:
                 # GS requested valid message ID
                 self.log_info(f"RX message RSSI: {SATELLITE_RADIO.get_rssi()}")
                 self.log_info(f"GS requested command: {self.rq_cmd}")
@@ -134,7 +133,6 @@ class Task(TemplateTask):
 
             else:
                 # GS requested invalid message ID
-                self.log_warning(f"GS requested invalid command: {self.rq_cmd}")
                 self.log_warning(f"GS requested invalid command: {self.rq_cmd}")
 
         else:

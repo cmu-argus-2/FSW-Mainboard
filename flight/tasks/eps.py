@@ -101,7 +101,6 @@ class Task(TemplateTask):
 
             self.log_data[EPS_IDX.TIME_EPS] = int(time.time())
 
-
             for key in SATELLITE.POWER_MONITORS:
                 if key == "BOARD":
                     self.read_vc(SATELLITE.POWER_MONITORS[key], EPS_IDX.MAINBOARD_VOLTAGE, EPS_IDX.MAINBOARD_CURRENT)
