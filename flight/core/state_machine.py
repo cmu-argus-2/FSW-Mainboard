@@ -32,6 +32,7 @@ class StateManager:
 
     def __init__(self):
         self.__current_state = None
+        self.__previous_state = None
         self.__scheduled_tasks = {}
         self.__initialized = False
         self.__task_config = None
@@ -45,6 +46,10 @@ class StateManager:
     @property
     def current_state(self):
         return self.__current_state
+
+    @property
+    def previous_state(self):
+        return self.__previous_state
 
     @property
     def scheduled_tasks(self):
