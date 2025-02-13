@@ -18,7 +18,6 @@ def acceleration(state):
 def propagate_orbit(
     current_time: int, last_update_time: int, last_updated_position: np.ndarray, last_updated_velocity: np.ndarray
 ):
-
     # Integration settings
     timestep = 1  # seconds
     num_steps = (last_update_time - current_time) // timestep

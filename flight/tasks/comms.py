@@ -101,8 +101,6 @@ class Task(TemplateTask):
 
             # State transition to RX state, values for RX counter not checked
             SATELLITE_RADIO.transition_state(0, 0)
-            # State transition to RX state, values for RX counter not checked
-            SATELLITE_RADIO.transition_state(0, 0)
             self.comms_state = SATELLITE_RADIO.get_state()
 
             self.log_info(f"Sent message with ID: {self.tx_msg_id}")
@@ -116,7 +114,6 @@ class Task(TemplateTask):
             self.rq_cmd = SATELLITE_RADIO.receive_message()
 
             # Check the response from the GS
-            if self.rq_cmd != 0x00:
             if self.rq_cmd != 0x00:
                 # GS requested valid message ID
                 self.log_info(f"RX message RSSI: {SATELLITE_RADIO.get_rssi()}")
@@ -133,13 +130,11 @@ class Task(TemplateTask):
                 DH.log_data("comms", [SATELLITE_RADIO.get_rssi()])
 
                 # Set ground pass true, reset timeout counter
-                # Set ground pass true, reset timeout counter
                 self.ground_pass = True
                 self.RX_COUNTER = 0
 
             else:
                 # GS requested invalid message ID
-                self.log_warning(f"GS requested invalid command: {self.rq_cmd}")
                 self.log_warning(f"GS requested invalid command: {self.rq_cmd}")
 
         else:

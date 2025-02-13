@@ -99,7 +99,6 @@ class SATELLITE_RADIO:
     file_array = []
 
     # Last TX'd message parameters
-    # Last TX'd message parameters
     tx_message_ID = 0x00
     tx_message = []
     tx_ack = 0x04

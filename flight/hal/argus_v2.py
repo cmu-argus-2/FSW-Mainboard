@@ -83,7 +83,6 @@ class ArgusV2Components:
     # BATTERY BOARD FUEL GAUGE
     FUEL_GAUGE_I2C = ArgusV2Interfaces.I2C0
     FUEL_GAUGE_I2C_ADDRESS = const(0x36)
-    FUEL_GAUGE_I2C_ADDRESS = const(0x36)
 
     # JETSON POWER MONITOR
     JETSON_POWER_MONITOR_I2C = ArgusV2Interfaces.I2C0
@@ -268,10 +267,7 @@ class ArgusV2Components:
 
 class ArgusV2(CubeSat):
     """ArgusV2: Represents the Argus V2 CubeSat."""
-    """ArgusV2: Represents the Argus V2 CubeSat."""
 
-    def __init__(self, debug: bool = False):
-        """__init__: Initializes the Argus V2 CubeSat."""
     def __init__(self, debug: bool = False):
         """__init__: Initializes the Argus V2 CubeSat."""
         self.__debug = debug
